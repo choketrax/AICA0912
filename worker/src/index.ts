@@ -40,6 +40,8 @@ export class AuditorContainer extends Container {
   };
 }
 
+import { dashboardApp } from "./dashboard";
+
 // Worker entry point — authenticates and proxies to container
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -51,6 +53,16 @@ export default {
       "Access-Control-Allow-Headers": "Content-Type, X-API-Key",
       "Access-Control-Max-Age": "86400",
     };
+
+    // Serve the UI Dashboard
+    if (url.pathname.startsWith("/dashboard")) {
+      const apiKey = request.headers.get("X-API-Key");
+      // For testing, let the HTML route pass, protect the API route
+      if (url.pathname.includes("/api/") && (!apiKey || apiKey !== env.API_KEY)) {
+         return new Response("Unauthorized", { status: 401 });
+      }
+      return await dashboardApp.fetch(request, env, ctx);
+    }
 
     // Handle CORS preflight
     if (request.method === "OPTIONS") {
