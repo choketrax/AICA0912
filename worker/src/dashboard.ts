@@ -3,7 +3,7 @@ import { Hono } from "hono";
 export const dashboardApp = new Hono().basePath('/dashboard');
 
 dashboardApp.get('/', (c) => {
-  const html = <!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -39,8 +39,8 @@ dashboardApp.get('/', (c) => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <h3 className="text-gray-500 text-sm font-medium mb-1">Total Period Spend</h3>
-                            <div className="text-3xl font-bold text-gray-900">{stats.spent.toFixed(2)}</div>
-                            <div className="text-sm text-green-500 mt-2">Well under budget ({stats.budget})</div>
+                            <div className="text-3xl font-bold text-gray-900">\${stats.spent.toFixed(2)}</div>
+                            <div className="text-sm text-green-500 mt-2">Well under budget (\${stats.budget})</div>
                         </div>
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <h3 className="text-gray-500 text-sm font-medium mb-1">Model Overrides</h3>
@@ -78,7 +78,7 @@ dashboardApp.get('/', (c) => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{r.rule_id}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{(r.cost_usd || 0).toFixed(6)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">\${(r.cost_usd || 0).toFixed(6)}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -91,7 +91,7 @@ dashboardApp.get('/', (c) => {
         root.render(<Dashboard />);
     </script>
 </body>
-</html>;
+</html>`;
   return c.html(html);
 });
 
