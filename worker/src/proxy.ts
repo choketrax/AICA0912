@@ -160,6 +160,9 @@ proxyRouter.post("/chat/completions", async (c) => {
   const fetchHeaders = new Headers();
   for (const [key, value] of c.req.raw.headers.entries()) {
     const lowerKey = key.toLowerCase();
+    // Do not forward host or content-length, fetch will recalculate them
+    if (lowerKey === 'host' || lowerKey === 'content-length') continue;
+    
     if (!lowerKey.startsWith('x-') || lowerKey.startsWith('x-portkey-')) {
       fetchHeaders.set(key, value);
     }
@@ -245,9 +248,9 @@ proxyRouter.post("/chat/completions", async (c) => {
       status: upstreamRes.status,
       headers: upstreamRes.headers
     });
-  } catch (err) {
+  } catch (err: any) {
     // Release budget
     // await budgetDO.fetch(new Request("http://do/release", { method: "POST", body: JSON.stringify({ reservation_id }) }));
-    return c.json({error: "Upstream request failed"}, 502);
+    return c.json({error: "Upstream request failed", details: err.message || String(err)}, 502);
   }
 });
