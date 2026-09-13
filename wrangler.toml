@@ -75,3 +75,8 @@ PORTKEY_BASE_URL = "https://rubeus.dl-56e.workers.dev"
 #                     If not set, proxy forwards directly to provider
 # BUDGET_DO         — bound DO namespace
 # The Container receives env vars via the AuditorContainer class envVars definition
+
+[[services]]
+binding = "PORTKEY_GATEWAY"
+service = "rubeus"
+

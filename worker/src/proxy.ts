@@ -175,11 +175,21 @@ proxyRouter.post("/chat/completions", async (c) => {
   fetchHeaders.set("Content-Type", "application/json");
 
   try {
-    const upstreamRes = await fetch(upstreamUrl, {
-      method: "POST",
-      headers: fetchHeaders,
-      body: JSON.stringify(body)
-    });
+    let upstreamRes: Response;
+    if (env.PORTKEY_GATEWAY) {
+      // Use internal service binding to avoid Error 1042 (loopback)
+      upstreamRes = await env.PORTKEY_GATEWAY.fetch(new Request('http://rubeus/v1/chat/completions', {
+        method: "POST",
+        headers: fetchHeaders,
+        body: JSON.stringify(body)
+      }));
+    } else {
+      upstreamRes = await fetch(upstreamUrl, {
+        method: "POST",
+        headers: fetchHeaders,
+        body: JSON.stringify(body)
+      });
+    }
 
     // 10. After response
     let responseBody = await upstreamRes.text();

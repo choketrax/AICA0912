@@ -18,6 +18,7 @@ export interface SCPEnv extends BaseEnv {
   SLACK_WEBHOOK_URL?: string;
   EMAIL_FROM?: string;
   PORTKEY_API_KEY?: string;
+  PORTKEY_GATEWAY?: any;
 }
 
 export interface PolicyRow {
