@@ -42,7 +42,7 @@ export class AuditorContainer extends Container {
 
 // Worker entry point — authenticates and proxies to container
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     const corsHeaders = {
