@@ -47,8 +47,8 @@ dashboardApp.get('/', (c) => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
                             <h3 className="text-gray-400 text-sm font-medium mb-1">Total Period Spend</h3>
-                            <div className="text-3xl font-bold text-white">\\${totalSpent.toFixed(2)}</div>
-                            <div className="text-sm text-emerald-400 mt-2">Org Budget limit: \\${totalBudget.toFixed(2)}</div>
+                            <div className="text-3xl font-bold text-white">{"$"}{totalSpent.toFixed(2)}</div>
+                            <div className="text-sm text-emerald-400 mt-2">Org Budget limit: {"$"}{totalBudget.toFixed(2)}</div>
                         </div>
                         <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
                             <h3 className="text-gray-400 text-sm font-medium mb-1">Model Overrides</h3>
@@ -70,7 +70,7 @@ dashboardApp.get('/', (c) => {
                             <div key={org.scope_id} className="mb-4">
                                 <div className="flex justify-between items-center bg-gray-900/50 p-3 rounded-lg border border-gray-700">
                                     <div className="font-bold text-lg text-white">?? {org.scope_id}</div>
-                                    <div className="text-emerald-400 font-mono">\\${org.spent_usd.toFixed(4)} / \\${org.budget_usd.toFixed(2)}</div>
+                                    <div className="text-emerald-400 font-mono">{"$"}{org.spent_usd.toFixed(4)} / {"$"}{org.budget_usd.toFixed(2)}</div>
                                 </div>
                                 
                                 <div className="ml-8 mt-3 border-l-2 border-gray-700 pl-4">
@@ -80,14 +80,14 @@ dashboardApp.get('/', (c) => {
                                         <div key={dept.scope_id} className="mb-3">
                                             <div className="flex justify-between items-center text-gray-300 py-1">
                                                 <div className="font-semibold">?? {dept.scope_id}</div>
-                                                <div className="text-emerald-500/80 font-mono text-sm">\\${dept.spent_usd.toFixed(4)} / \\${dept.budget_usd.toFixed(2)}</div>
+                                                <div className="text-emerald-500/80 font-mono text-sm">{"$"}{dept.spent_usd.toFixed(4)} / {"$"}{dept.budget_usd.toFixed(2)}</div>
                                             </div>
                                             
                                             <div className="ml-6 mt-1 border-l border-gray-700/50 pl-4 space-y-1">
                                                 {agentBudgets.map(agent => (
                                                     <div key={agent.scope_id} className="flex justify-between items-center text-sm text-gray-400 py-1">
                                                         <div>?? {agent.scope_id}</div>
-                                                        <div className="font-mono text-xs">\\${agent.spent_usd.toFixed(6)} / \\${agent.budget_usd.toFixed(2)}</div>
+                                                        <div className="font-mono text-xs">{"$"}{agent.spent_usd.toFixed(6)} / {"$"}{agent.budget_usd.toFixed(2)}</div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -124,7 +124,7 @@ dashboardApp.get('/', (c) => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{r.rule_id || 'n/a'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{r.scope_id || 'global'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">\\${Number(r.cost_usd || 0).toFixed(6)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{"$"}{Number(r.cost_usd || 0).toFixed(6)}</td>
                                     </tr>
                                 ))}
                             </tbody>
