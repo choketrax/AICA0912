@@ -159,7 +159,8 @@ proxyRouter.post("/chat/completions", async (c) => {
 
   const fetchHeaders = new Headers();
   for (const [key, value] of c.req.raw.headers.entries()) {
-    if (!key.toLowerCase().startsWith('x-')) {
+    const lowerKey = key.toLowerCase();
+    if (!lowerKey.startsWith('x-') || lowerKey.startsWith('x-portkey-')) {
       fetchHeaders.set(key, value);
     }
   }
