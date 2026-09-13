@@ -64,7 +64,7 @@ crons = ["*/5 * * * *"]
 [vars]
 APP_ENV = "production"
 API_KEY = "container-internal"
-PORTKEY_BASE_URL = "https://api.portkey.ai"
+PORTKEY_BASE_URL = "https://rubeus.dl-56e.workers.dev"
 
 # Secrets (set with: npx wrangler secret put <NAME>)
 # API_KEY           — required, main auth token
