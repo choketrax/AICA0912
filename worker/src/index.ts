@@ -241,4 +241,12 @@ export default {
     }
     return newResponse;
   },
+
+  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    await handleScheduled(env, ctx);
+  },
+
+  async queue(batch: MessageBatch<SCPEvent>, env: Env, ctx: ExecutionContext): Promise<void> {
+    await handleQueue(batch, env, ctx);
+  },
 };
