@@ -187,114 +187,86 @@ export async function handleQueue(
 
   for (const message of batch.messages) {
     try {
-      const event = message.body;
-      const eventId = (event as any)?.event_id;
+      const event: any = message.body;
+      const eventId = event?.event_id;
       if (eventId) {
         const alreadyProcessed = await env.DB.prepare(
           `SELECT 1 FROM scp_policy_log WHERE event_id = ? LIMIT 1`
         ).bind(eventId).first();
         
         if (alreadyProcessed) {
-          // Duplicate queue delivery — ack and skip
           console.log(`[SCP] Duplicate queue event skipped: ${eventId}`);
           message.ack();
           continue;
         }
       }
 
-      if (
-        event.type === "AUTHORIZE_DECISION" &&
-        event.decision &&
-        event.request
-      ) {
-        const d = event.decision;
-        const r = event.request;
-        const scope = r.agent_id
-          ? "agent"
-          : r.project_id
-            ? "project"
-            : r.customer_id
-              ? "customer"
-              : "global";
-        const scopeId = r.agent_id || r.project_id || r.customer_id || "global";
-
+      if (event.type === 'proxy_completion') {
+        const orgId = event.customer_id || "global";
+        const deptId = event.project_id;
+        const agentId = event.agent_id;
+        const costUsd = event.cost_usd || 0;
+        
         // 1. Record decision to scp_policy_log
         await env.DB.prepare(
           `
-          INSERT OR IGNORE INTO scp_policy_log (event_id, request_id, scope, scope_id, action, rule_id, timestamp)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `,
+          INSERT OR IGNORE INTO scp_policy_log (event_id, request_id, scope, scope_id, action, rule_id, timestamp, cost_usd)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `
         )
           .bind(
             eventId || crypto.randomUUID(),
-            d.request_id,
-            scope,
-            scopeId,
-            d.action,
-            d.rule_id || null,
-            event.timestamp,
+            event.request_id,
+            "org",
+            orgId,
+            event.action,
+            event.rule_id || null,
+            event.timestamp || new Date().toISOString(),
+            costUsd
           )
           .run();
 
-        // 3. Update circuit state counters on pause action
-        if (d.action === "pause") {
-          await env.DB.prepare(
-            `
-            INSERT INTO scp_circuit_state (scope, scope_id, state, consecutive_failures, requires_approval)
-            VALUES (?, ?, 'closed', 1, false)
-            ON CONFLICT(scope, scope_id) DO UPDATE SET consecutive_failures = consecutive_failures + 1
-          `,
-          )
-            .bind(scope, scopeId)
-            .run();
-
-          // 4. Insert into scp_approvals if paused
-          await env.DB.prepare(
-            `
-            INSERT INTO scp_approvals (request_id, scope, scope_id, status, created_at)
-            VALUES (?, ?, ?, 'pending', ?)
-          `,
-          )
-            .bind(d.request_id, scope, scopeId, event.timestamp)
-            .run();
-        } else if (d.action === "allow" || d.action === "route") {
-          // Decrement or reset? Usually reset on success
-          await env.DB.prepare(
-            `
-            UPDATE scp_circuit_state SET consecutive_failures = 0 WHERE scope = ? AND scope_id = ?
-          `,
-          )
-            .bind(scope, scopeId)
-            .run();
-        }
-      } else if (event.type === "LEDGER_UPDATE" && event.cost_usd) {
-        // 2. Update scp_budget_ledger with actual cost if provided in queue
-        const r = event.request || {};
-        const scope = r.agent_id
-          ? "agent"
-          : r.project_id
-            ? "project"
-            : r.customer_id
-              ? "customer"
-              : "global";
-        const scopeId = r.agent_id || r.project_id || r.customer_id || "global";
-
+        // 2. Update Org Budget (Default $50,000)
         await env.DB.prepare(
           `
           INSERT INTO scp_budget_ledger (scope, scope_id, period, spent_usd, budget_usd, warning_threshold_pct, block_threshold_pct)
-          VALUES (?, ?, ?, ?, 1000, 75, 100)
+          VALUES ('org', ?, ?, ?, 50000, 75, 100)
           ON CONFLICT(scope, scope_id, period) DO UPDATE SET spent_usd = spent_usd + ?
-        `,
+        `
         )
-          .bind(scope, scopeId, period, event.cost_usd, event.cost_usd)
+          .bind(orgId, period, costUsd, costUsd)
           .run();
+
+        // 3. Update Dept Budget (Default $15,000) if present
+        if (deptId) {
+          await env.DB.prepare(
+            `
+            INSERT INTO scp_budget_ledger (scope, scope_id, period, spent_usd, budget_usd, warning_threshold_pct, block_threshold_pct)
+            VALUES ('dept', ?, ?, ?, 15000, 75, 100)
+            ON CONFLICT(scope, scope_id, period) DO UPDATE SET spent_usd = spent_usd + ?
+          `
+          )
+            .bind(deptId, period, costUsd, costUsd)
+            .run();
+        }
+
+        // 4. Update Agent Budget (Default $5,000) if present
+        if (agentId) {
+          await env.DB.prepare(
+            `
+            INSERT INTO scp_budget_ledger (scope, scope_id, period, spent_usd, budget_usd, warning_threshold_pct, block_threshold_pct)
+            VALUES ('agent', ?, ?, ?, 5000, 75, 100)
+            ON CONFLICT(scope, scope_id, period) DO UPDATE SET spent_usd = spent_usd + ?
+          `
+          )
+            .bind(agentId, period, costUsd, costUsd)
+            .run();
+        }
       }
 
       message.ack();
     } catch (error) {
       console.error("Failed processing queue message:", error);
-      // Depending on strictness, we might message.retry() here
-      // For now, logging to avoid poison messages permanently stalling queue
     }
   }
 }
